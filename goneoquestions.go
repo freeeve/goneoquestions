@@ -104,7 +104,7 @@ func getLatestSOQuestions() []string {
 		t = startTime
 	}
 	timeStr := fmt.Sprintf("%d", t)
-	url := "https://api.stackexchange.com/2.1/search?fromdate=" + timeStr + "&order=asc&sort=creation&tagged=neo4j&site=stackoverflow"
+	url := "https://api.stackexchange.com/2.1/search?fromdate=" + timeStr + "&order=asc&sort=creation&tagged=neo4j;cypher&site=stackoverflow"
 	fmt.Println("url: " + url)
 	resp, err := http.Get(url)
 	if err != nil {
