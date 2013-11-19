@@ -7,6 +7,8 @@ import (
 	"html"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mrjones/oauth"
@@ -83,7 +85,10 @@ func main() {
 }
 
 type SOQueryResponse struct {
-	Items []SOItem `json:"items"`
+	Items        []SOItem `json:"items"`
+	Backoff      uint     `json:"backoff"`
+	ErrorName    string   `json:"error_name"`
+	ErrorMessage string   `json:"error_message"`
 }
 
 type SOItem struct {
@@ -109,6 +114,28 @@ func getLatestSOQuestions() []string {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		fmt.Println(err)
+	}
+	//{"error_name":"throttle_violation","error_message":"too many requests from this IP, more requests available in 76366 seconds","error_id":502}
+	if len(response.Items) == 0 {
+		fmt.Println("items length is 0... printing response:")
+		fmt.Println(response.ErrorName)
+		fmt.Println(response.ErrorMessage)
+		if response.ErrorName == "throttle_violation" {
+			split := strings.Split(response.ErrorMessage, " ")
+			secs, err := strconv.Atoi(split[len(split)-2])
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				if secs < 100000 {
+					fmt.Println(fmt.Sprintf("throttled, sleeping for %ds", secs))
+					time.Sleep(time.Duration(secs) * time.Second)
+				}
+			}
+		}
+	}
+	if response.Backoff > 0 {
+		fmt.Println(fmt.Sprintf("backoff set, sleeping for %ds", response.Backoff))
+		time.Sleep(time.Duration(response.Backoff) * time.Second)
 	}
 	questions := []string{}
 	for _, item := range response.Items {
