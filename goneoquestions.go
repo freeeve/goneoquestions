@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/VividCortex/robustly"
 	"github.com/mrjones/oauth"
 )
 
@@ -21,26 +22,28 @@ func Usage() {
 	fmt.Println("  --consumersecret <consumersecret>")
 }
 
+var posted = map[string]bool{}
+
+var consumerKey *string = flag.String(
+	"consumerkey",
+	"",
+	"Consumer Key from Twitter. See: https://dev.twitter.com/apps/new")
+
+var consumerSecret *string = flag.String(
+	"consumersecret",
+	"",
+	"Consumer Secret from Twitter. See: https://dev.twitter.com/apps/new")
+var accessTokenKey *string = flag.String(
+	"accesstoken",
+	"",
+	"Access Token from Twitter.")
+
+var accessTokenSecret *string = flag.String(
+	"accesstokensecret",
+	"",
+	"Access Token Secret from Twitter.")
+
 func main() {
-	var consumerKey *string = flag.String(
-		"consumerkey",
-		"",
-		"Consumer Key from Twitter. See: https://dev.twitter.com/apps/new")
-
-	var consumerSecret *string = flag.String(
-		"consumersecret",
-		"",
-		"Consumer Secret from Twitter. See: https://dev.twitter.com/apps/new")
-	var accessTokenKey *string = flag.String(
-		"accesstoken",
-		"",
-		"Access Token from Twitter.")
-
-	var accessTokenSecret *string = flag.String(
-		"accesstokensecret",
-		"",
-		"Access Token Secret from Twitter.")
-
 	flag.Parse()
 
 	if len(*consumerKey) == 0 || len(*consumerSecret) == 0 {
@@ -50,6 +53,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	robustly.Run(func() { loop() })
+}
+
+func loop() {
 	c := oauth.NewConsumer(
 		*consumerKey,
 		*consumerSecret,
@@ -60,8 +67,6 @@ func main() {
 		})
 
 	accessToken := &oauth.AccessToken{*accessTokenKey, *accessTokenSecret}
-
-	posted := map[string]bool{}
 	for {
 		qs := getLatestSOQuestions()
 		for _, q := range qs {
@@ -77,10 +82,12 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				}
+				fmt.Println("sleeping for 10 seconds")
 				time.Sleep(10 * time.Second)
 			}
 		}
-		time.Sleep(10 * time.Minute)
+		fmt.Println("sleeping for 5 minutes")
+		time.Sleep(5 * time.Minute)
 	}
 }
 
@@ -128,14 +135,14 @@ func getLatestSOQuestions() []string {
 			} else {
 				if secs < 100000 {
 					fmt.Println(fmt.Sprintf("throttled, sleeping for %ds", secs))
-					time.Sleep(time.Duration(secs) * time.Second)
+					time.Sleep(time.Duration(secs+1) * time.Second)
 				}
 			}
 		}
 	}
 	if response.Backoff > 0 {
 		fmt.Println(fmt.Sprintf("backoff set, sleeping for %ds", response.Backoff))
-		time.Sleep(time.Duration(response.Backoff) * time.Second)
+		time.Sleep(time.Duration(response.Backoff+1) * time.Second)
 	}
 	questions := []string{}
 	for _, item := range response.Items {
