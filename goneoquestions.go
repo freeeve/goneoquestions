@@ -53,7 +53,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	robustly.Run(func() { loop() })
+	robustly.Run(func() {
+      time.Sleep(10 * time.Minute)
+		loop()
+	})
 }
 
 func loop() {
@@ -103,7 +106,7 @@ type SOItem struct {
 	Link  string `json:"link"`
 }
 
-var startTime int64 = time.Now().Unix()
+var startTime int64 = time.Now().Unix() - (60 * 60)
 
 func getLatestSOQuestions() []string {
 	t := time.Now().Unix() - (60 * 60 * 24)
