@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/VividCortex/robustly"
 	"github.com/mrjones/oauth"
+	"github.com/VividCortex/robustly"
 )
 
 func Usage() {
@@ -53,9 +53,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	robustly.Run(func() {
-      time.Sleep(10 * time.Minute)
-		loop()
+	robustly.Run(loop, &robustly.RunOptions{
+		RateLimit:  1.0,
+		Timeout:    1 * time.Second,
+		PrintStack: true,
+		RetryDelay: 10 * time.Minute,
 	})
 }
 
