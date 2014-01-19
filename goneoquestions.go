@@ -66,7 +66,7 @@ func loop() {
 		*consumerKey,
 		*consumerSecret,
 		oauth.ServiceProvider{
-			RequestTokenUrl:   "http://api.twitter.com/oauth/request_token",
+			RequestTokenUrl:   "https://api.twitter.com/oauth/request_token",
 			AuthorizeTokenUrl: "https://api.twitter.com/oauth/authorize",
 			AccessTokenUrl:    "https://api.twitter.com/oauth/access_token",
 		})
@@ -79,7 +79,7 @@ func loop() {
 				fmt.Println(q)
 				posted[q] = true
 				_, err := c.Post(
-					"http://api.twitter.com/1.1/statuses/update.json",
+					"https://api.twitter.com/1.1/statuses/update.json",
 					map[string]string{
 						"status": q,
 					},
